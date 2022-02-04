@@ -70,7 +70,7 @@ build-toolchain:	${TARGET_CROSS_PREFIX}-gcc
 
 # --- boot0
 
-sun20i_d1_spl/nboot/boot0_sdcard_sun20iw1p1.bin:	${TARGET_CROSS_PREFIX}-gcc
+sun20i_d1_spl/nboot/boot0_sdcard_sun20iw1p1.bin:
 	make -C sun20i_d1_spl CROSS_COMPILE=${TARGET_CROSS_PREFIX}- p=sun20iw1p1 mmc
 
 .PHONY: .build-boot0
