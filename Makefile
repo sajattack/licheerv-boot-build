@@ -3,6 +3,7 @@
 #  /bin/bash as SHELL
 
 export SHELL = /bin/bash
+TARGET_CROSS_PREFIX=riscv64-linux-gnu
 
 all:    world
 
@@ -19,7 +20,7 @@ TARGET_CROSS_PREFIX = ${TOOLCHAIN_PREFIX}/bin/${TARGET_CROSS}
 EXTERNAL_CROSS = 0
 else
 TARGET_CROSS_PATH := $(shell dirname $$(which $${TARGET_CROSS_PREFIX}-gcc))
-TARGET_CROSS_PREFIX := ${TARGET_CROSS_PATH}/${TARGET_CROSS_PREFIX}
+#TARGET_CROSS_PREFIX := ${TARGET_CROSS_PATH}/${TARGET_CROSS_PREFIX}
 EXTERNAL_CROSS = 1
 endif
 
@@ -61,8 +62,8 @@ else
 	@touch riscv-gnu-toolchain/Makefile
 endif
 
-${TARGET_CROSS_PREFIX}-gcc:	| riscv-gnu-toolchain/Makefile
-	make ${PARALLEL} -C riscv-gnu-toolchain linux
+#${TARGET_CROSS_PREFIX}-gcc:	| riscv-gnu-toolchain/Makefile
+#	make ${PARALLEL} -C riscv-gnu-toolchain linux
 
 .PHONY: build-toolchain
 build-toolchain:	${TARGET_CROSS_PREFIX}-gcc
@@ -78,7 +79,7 @@ sun20i_d1_spl/nboot/boot0_sdcard_sun20iw1p1.bin:	${TARGET_CROSS_PREFIX}-gcc
 
 # --- opensbi
 
-opensbi/build/platform/generic/firmware/fw_dynamic.bin:	opensbi	${TARGET_CROSS_PREFIX}-gcc
+opensbi/build/platform/generic/firmware/fw_dynamic.bin:	opensbi
 	make -C opensbi CROSS_COMPILE=${TARGET_CROSS_PREFIX}- PLATFORM=generic FW_PIC=y FW_OPTIONS=0x2
 
 .PHONY: .build-opensbi
@@ -93,8 +94,8 @@ clean::
 u-boot/.config:	u-boot
 	make -C u-boot nezha_defconfig
 
-u-boot/u-boot-nodtb.bin:	u-boot u-boot/.config ${TARGET_CROSS_PREFIX}-gcc
-	make ${PARALLEL} -C u-boot ARCH=${TARGET_ARCH} CROSS_COMPILE=${TARGET_CROSS}- all V=1
+u-boot/u-boot-nodtb.bin:	u-boot u-boot/.config
+	make ${PARALLEL} -C u-boot ARCH=${TARGET_ARCH} CROSS_COMPILE=${TARGET_CROSS_PREFIX}- all V=1
 
 .PHONY: .build-uboot
 
@@ -203,7 +204,7 @@ busybox/configs/licheerv_defconfig:	configs/busybox/licheerv_busybox_config
 build-busybox/.config:	busybox/configs/licheerv_defconfig | build-busybox
 	make -C busybox O=../build-busybox licheerv_defconfig
 
-build-busybox/busybox:	build-busybox/.config ${TARGET_CROSS_PREFIX}-gcc
+build-busybox/busybox:	build-busybox/.config
 	LDFLAGS="-static" make -C build-busybox ${PARALLEL} ARCH=${TARGET_ARCH_AUX} CROSS_COMPILE=${TARGET_CROSS_PREFIX}- V=1
 
 ${SYSROOT}/bin/busybox:	build-busybox/busybox | populate-dirs
@@ -264,8 +265,8 @@ distclean::
 
 # --- initramfs.img.gz
 
-initramfs.img.gz:	initramfs.cpio u-boot/u-boot.itb
-	u-boot/tools/mkimage -A riscv -O linux -T ramdisk -C gzip -d initramfs.cpio $@
+initramfs.img.gz:	initramfs.cpio #u-boot/u-boot.itb
+	mkimage -A riscv -O linux -T ramdisk -C gzip -d initramfs.cpio $@
 
 clean::
 	-rm initramfs.img.gz
